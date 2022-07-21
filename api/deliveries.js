@@ -51,7 +51,6 @@ exports.deliveryById = async (req, res) => {
   }
 }
 
-// get deliveries paginated
 exports.paginateDeliveries = async (req, res) => {
   const { pageSize, pageNumber } = req.query;
   const deliveries = db.collection("deliveries");
@@ -62,6 +61,7 @@ exports.paginateDeliveries = async (req, res) => {
       .startAt(Number(pageNumber))
       .get();
     const deliveriesData = data.docs.map((doc) => ({
+      // sort by id
       id: doc.id,
       ...doc.data(),
     }));

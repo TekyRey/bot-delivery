@@ -1,38 +1,37 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsDoc = require('swagger-jsdoc');
 app.use(express.json());
 app.use(cors());
-const {
-  deliveries,
-  createDelivery,
-  paginateDeliveries,
-  deliveryById,
-} = require("./api/deliveries");
-const {
-  bots,
-  createBot,
-  botById,
-  getPendingDeliveries,
-} = require("./api/bots");
+const deliveryRouter = require('./routes/routes');
 
 
-app.get("/deliveries", deliveries);
-app.post("/deliveries", createDelivery);
-app.get("/deliveries/:id", deliveryById);
-app.get("/deliveries/paginate", paginateDeliveries);
-// get deliveries paginated sample url
-// http://localhost:5000/deliveries/paginate?pageSize=10&pageNumber=1
-// get delivery by id sample url
-// http://localhost:5000/deliveries/5e9f8f8f8f8f8f8f8f8f8f8
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Bot Delivery API",
+      version: "1.0.0",
+      description:
+        "This is a sample Bot Delivery API built to manage bots and deliveries",
+    },
+    servers: [
+      {
+        url: "http://localhost:4000",
+        description: "Local server",
+      }
+    ],
+   
+  }, apis: ["./routes/*.js"],
+};
+const specs = swaggerJsDoc(options);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
-// get bots
-app.get("/bots", bots);
-app.post("/bots", createBot);
-app.get("/bots/:zone_id", botById);
 
-// get pending deliveries
-app.get("/pendingdeliveries", getPendingDeliveries);
+app.use("/api", deliveryRouter);
+
 app.listen(4000, () => {
     console.log('listening on port 4000')
 })
