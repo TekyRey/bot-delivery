@@ -1,6 +1,5 @@
 const { db } = require("../util/admin");
 
-// get all bots from firebase collection
 exports.bots = async (req, res) => {
     const bots = db.collection("bots");
     try {
@@ -18,7 +17,6 @@ exports.bots = async (req, res) => {
     }
 }
     
-// post bot to the firebase collection
 exports.createBot = async (req, res) => {
     const bots = db.collection("bots");
     const data = req.body;
@@ -33,7 +31,6 @@ exports.createBot = async (req, res) => {
     }
 }
 
-    // get bot data from firebase collection by their zone_id
 exports.botById = async (req, res) => {
   const bots = db.collection("bots");
   const zone_id = req.params.zone_id;
@@ -52,42 +49,6 @@ exports.botById = async (req, res) => {
   }
 };
 
-
-// assign available bot to a pending delivery and change bot status to busy and delivery status to assigned
-// exports.assignBot = async (req, res) => {
-//     const bots = db.collection("bots");
-//     const deliveries = db.collection("deliveries");
-//     const bot_id = req.params.id;
-//     const delivery_id = req.params.id;
-//     try {
-//         const bot = await bots.doc(bot_id).get();
-//         const delivery = await deliveries.doc(delivery_id).get();
-//         const botData = {
-//           id: bot.bot_id,
-//           ...bot.data(),
-//         };
-//         const deliveryData = {
-//           id: delivery.delivery_id,
-//           ...delivery.data(),
-//         };
-//         await bots.doc(bot_id).update({
-//             status: "busy",
-//             id: delivery_id,
-//         });
-//         await deliveries.doc(delivery_id).update({
-//             status: "assigned",
-//         });
-//         return res.status(201).json({ botData, deliveryData });
-//     }
-//     catch (error) {
-//         return res
-//             .status(500)
-
-//             .json({ general: "Something went wrong, please try again" });
-//     }
-// }
-
-// update bot status to busy where status is available in typesctipt
 exports.updateBotStatus = async (req, res) => {
     const bots = db.collection("bots");
     const bot_id = req.params.id;
@@ -105,26 +66,7 @@ exports.updateBotStatus = async (req, res) => {
     }
 }
 
-
-// exports.assignBot = async (req, res) => {
-//     const bots = db.collection("bots");
-//     const bot_id = req.body.id;
-//     try {
-//         await bots.doc(bot_id).update({
-//             status: "busy",
-//         });
-//         return res.status(201).json({ msg: "success" });
-//     }
-//     catch (error) {
-//         return res
-//             .status(500)
-//             .json({ general: "Something went wrong, please try again" });
-//     }
-// }
-
-
-// 1. get all pending deliveries
-exports.getPendingDeliveries = async (req, res) => {
+exports.assignBot = async (req, res) => {
     const deliveries = db.collection("deliveries");
     try {
         await deliveries.get().then((snapshot) => {
@@ -132,14 +74,12 @@ exports.getPendingDeliveries = async (req, res) => {
                 id: doc.id,
                 ...doc.data(),
             }));
-// 2. get all bots with available status
             const bots = db.collection("bots");
             bots.get().then((snapshot) => {
                 const botsData = snapshot.docs.map((doc) => ({
                     id: doc.id,
                     ...doc.data(),
-                }));
-// 3. assign bots to pending deliveries   
+                }));  
                 const deg2rad = (deg) => {
                     return deg * (Math.PI / 180);
                 }
@@ -161,7 +101,6 @@ exports.getPendingDeliveries = async (req, res) => {
                
                 deliveriesData.forEach(delivery => {
                     if (delivery.status === "pending") {
-                        // get nearest bot to delivery pickup location
                         if (delivery.zone_id === bots.zone_id) {
 
                             const nearestBot = botsData.reduce((acc, curr) => {
@@ -179,9 +118,7 @@ exports.getPendingDeliveries = async (req, res) => {
                                 }
                                 return acc;
                             }, { distance: Number.MAX_VALUE });
-                            // assign bot to delivery
                             nearestBot.bot.status = "busy";
-                            // nearestBot.bot.delivery_id = delivery.id;
                             bots.doc(nearestBot.bot.id).update(nearestBot.bot);
                             deliveries.doc(delivery.id).update(delivery);
                         }
@@ -193,12 +130,8 @@ exports.getPendingDeliveries = async (req, res) => {
         return res.status(201).json({ msg: "success" });
     }
     catch (error) {
-            console.log(error);
-
         return res
-        
             .status(500)
-            // // log error to console
             .json({ general: "Something went wrong, please try again" });
         
     }
